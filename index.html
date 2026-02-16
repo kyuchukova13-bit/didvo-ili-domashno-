@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>ДИВО ИЛИ ДОМАШНО - КАРТОНЕН РЕЛЕФ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+
+        :root {
+            --bg-green: #2d6a4f;
+            --mustard: #ffb703;
+            --mustard-dark: #cc9200;
+            --orange: #fb8500;
+            --orange-dark: #c16600;
+            --white-border: 12px solid #ffffff;
+        }
+
+        body { 
+            margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; 
+            background: var(--bg-green); color: white; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; height: 100vh;
+        }
+
+        /* НАЧАЛЕН ЕКРАН */
+        #start-screen {
+            position: fixed; inset: 0; background: var(--bg-green); z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .start-card {
+            background: #ffffff; padding: 60px; border-radius: 60px;
+            border: 15px solid var(--mustard); text-align: center; color: #333;
+        }
+        .start-btn {
+            margin-top: 40px; background: var(--orange); color: white;
+            border: 8px solid white; padding: 30px 100px; font-size: 3.5em; 
+            border-radius: 50px; font-weight: 900; cursor: pointer;
+            box-shadow: 0 15px 0 var(--orange-dark); transition: 0.1s;
+        }
+        .start-btn:active { transform: translateY(10px); box-shadow: 0 5px 0 var(--orange-dark); }
+
+        /* ИГРОВА ЧАСТ */
+        .header-row {
+            display: flex; align-items: center; justify-content: center; gap: 40px;
+            width: 100%; padding-top: 25px;
+        }
+
+        /* КАРТОНЕНИ БУТОНИ */
+        .btn-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        
+        .cardboard-btn {
+            width: 380px; padding: 40px 20px; border-radius: 50px; border: var(--white-border);
+            text-align: center; transition: 0.2s;
+        }
+        .cardboard-btn h2 { font-size: 3.8em; margin: 0; font-weight: 900; text-shadow: 3px 3px 0 rgba(0,0,0,0.2); }
+
+        #btn-domestic { background: var(--mustard); box-shadow: 0 18px 0 var(--mustard-dark); }
+        #btn-wild { background: var(--orange); box-shadow: 0 18px 0 var(--orange-dark); }
+
+        /* ИНСТРУКЦИИ - ТАБЕЛИ */
+        .signpost {
+            background: white; color: var(--bg-green); padding: 15px 40px;
+            border-radius: 30px; font-size: 2.5em; font-weight: 900;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 5px solid #eee;
+        }
+
+        /* ЕФЕКТ ПРИ ПОЗНАВАНЕ */
+        .active { transform: scale(1.05) translateY(10px); box-shadow: 0 5px 0 transparent !important; border-color: #f1c40f !important; }
+
+        /* ЖИВОТНО */
+        .animal-frame {
+            width: 250px; height: 250px; background: white; border-radius: 50px;
+            border: var(--white-border); padding: 20px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        #animal-img { max-width: 95%; max-height: 95%; object-fit: contain; }
+
+        /* КАМЕРА */
+        #canvas-container { 
+            margin-top: 30px; border-radius: 50px; border: var(--white-border);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        .footer { position: fixed; bottom: 20px; font-size: 1.2em; font-weight: 900; opacity: 0.5; }
+
+        #feedback {
+            display: none; position: absolute; top: 40%; background: #2ecc71;
+            padding: 50px 120px; border-radius: 100px; font-size: 6em; color: white;
+            z-index: 2000; border: 15px solid white; font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <div class="start-card">
+            <h1 style="font-size: 4em; margin: 0;">ГОТОВИ ЛИ СТЕ?</h1>
+            <div style="margin: 40px 0; font-size: 2.2em; line-height: 1.5;">
+                🏠 <b>ДОМАШНО</b> = РЪЦЕ ГОРЕ<br>
+                🦁 <b>ДИВО</b> = РЪЦЕ ВСТРАНИ
+            </div>
+            <button class="start-btn" onclick="startGame()">СТАРТ</button>
+        </div>
+    </div>
+
+    <div class="header-row">
+        <div class="btn-container">
+            <div class="cardboard-btn" id="btn-domestic"><h2>ДОМАШНО</h2></div>
+            <div class="signpost">☝️ РЪЦЕ ГОРЕ</div>
+        </div>
+        
+        <div style="text-align: center;">
+            <div style="font-size: 2.5em; font-weight: 900; margin-bottom: 10px;">ИЛИ</div>
+            <div class="animal-frame">
+                <img id="animal-img" src="" alt="">
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <div class="cardboard-btn" id="btn-wild"><h2>ДИВО</h2></div>
+            <div class="signpost">👐 ВСТРАНИ</div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="feedback">БРАВО! ✅</div>
+
+    <div class="footer">Автор: Кючукова</div>
+
+<script>
+    let video, poseNet, poses = [];
+    let currentIdx = 0, canAnswer = true, gameStarted = false;
+
+    // Списъкът с Вашите изображения
+   const quizData = [
+        { img: "bear.png", type: "wild" },
+        { img: "bee.png", type: "wild" },
+        { img: "cat.png", type: "domestic" },
+        { img: "cow.png", type: "domestic" },
+        { img: "dog.png", type: "domestic" },
+        { img: "fox.png", type: "wild" },
+        { img: "frog.png", type: "wild" },
+        { img: "goat.png", type: "domestic" },
+        { img: "hedgehog.png", type: "wild" },
+        { img: "hen.png", type: "domestic" },
+        { img: "owl.png", type: "wild" },
+        { img: "pig.png", type: "domestic" },
+        { img: "rabbit.png", type: "wild" },
+        { img: "sheep.png", type: "domestic" },
+        { img: "squirrel.png", type: "wild" },
+        { img: "stork.png", type: "wild" },
+        { img: "turkey.png", type: "domestic" },
+        { img: "wolf.png", type: "wild" }
+    ];
+
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        gameStarted = true;
+    }
+
+    function setup() {
+        let canvas = createCanvas(600, 450);
+        canvas.parent('canvas-container');
+        video = createCapture(VIDEO);
+        video.size(600, 450);
+        
+        // Поправка на PoseNet за версия 0.12.2
+        poseNet = ml5.poseNet(video, () => console.log('ИИ е готов!'));
+        poseNet.on('pose', results => poses = results);
+        video.hide();
+        loadAnimal();
+    }
+
+    function draw() {
+        if (!gameStarted) return;
+        translate(width, 0); scale(-1, 1);
+        image(video, 0, 0, width, height);
+        
+        if (poses.length > 0 && canAnswer) {
+            let pose = poses[0].pose;
+            
+            let detected = null;
+            // Логика за РЪЦЕ ГОРЕ
+            if (pose.leftWrist.y < pose.nose.y - 60 && pose.rightWrist.y < pose.nose.y - 60) {
+                detected = 'domestic';
+            } 
+            // Логика за РЪЦЕ ВСТРАНИ
+            else if (abs(pose.leftWrist.x - pose.rightWrist.x) > width * 0.75) {
+                detected = 'wild';
+            }
+
+            if (detected) {
+                resetUI();
+                document.getElementById('btn-' + detected).classList.add('active');
+                if (detected === quizData[currentIdx].type) win();
+            } else {
+                resetUI();
+            }
+        }
+    }
+
+    function resetUI() {
+        document.getElementById('btn-domestic').classList.remove('active');
+        document.getElementById('btn-wild').classList.remove('active');
+    }
+
+    function win() {
+        canAnswer = false;
+        document.getElementById('feedback').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('feedback').style.display = 'none';
+            currentIdx = (currentIdx + 1) % quizData.length;
+            loadAnimal();
+            canAnswer = true;
+        }, 1800);
+    }
+
+    function loadAnimal() {
+        // Зареждане директно от основната папка
+        document.getElementById('animal-img').src = quizData[currentIdx].img;
+    }
+</script>
+</body>
+</html>
